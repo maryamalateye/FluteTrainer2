@@ -23,6 +23,8 @@ var config: Dictionary = {}
 @onready var mic: AudioStreamPlayer = $Mic
 @onready var note_progress: ProgressBar = $NoteProgress
 @onready var beat_pulse: ColorRect = $BeatPulse
+@onready var explayer: AudioStreamPlayer = $ExPlayer
+
 
 var spectrum: AudioEffectSpectrumAnalyzerInstance
 var listening := false
@@ -39,6 +41,7 @@ var note_elapsed := 0.0
 var metronome_elapsed := 0.0
 var pulse_strength := 0.0
 var _last_shown_index := -1
+var session_elapsed := 0.0	#seconds since listening started, used to timestamp note onsets for tempo tracking
 
 func _ready() -> void:
 	record_button.show()
@@ -52,6 +55,9 @@ func start() -> void:
 	var bpm: int = config.get("BPM", 80)
 	exercise_notes = config.get("Notes", [])
 	var beats: Array = config.get("Beats", [])
+	var audio_path: String = config.get("AudioPath", "")
+	if audio_path != "":
+		explayer.stream = load(audio_path)
 	note_beats.clear()
 	for i in range(exercise_notes.size()):
 		note_beats.append(float(beats[i]) if i < beats.size() else 1.0)
@@ -103,6 +109,7 @@ func _process(delta: float) -> void:
 
 	if newly_committed != "":
 		print(newly_committed)
+		Comparator.record_onset(session_elapsed)
 
 # Advances one note per beat/half-beat, on a clock, instead of waiting for the
 # player to hold a note stably — keeps the exercise moving at tempo. Scores
@@ -110,6 +117,8 @@ func _process(delta: float) -> void:
 func _update_timing(delta: float) -> void:
 	if not Comparator.session_active:
 		return
+
+	session_elapsed += delta
 
 	var beat_length: float = max(Comparator.seconds_per_beat, 0.001)
 	metronome_elapsed += delta
@@ -205,12 +214,13 @@ func _start_listening() -> void:
 	note_elapsed = 0.0
 	metronome_elapsed = 0.0
 	pulse_strength = 0.0
+	session_elapsed = 0.0
 	_last_shown_index = -1
 	if note_progress:
 		note_progress.value = 0.0
 	label.text = "Go!"
 	label.modulate = Color.WHITE
-	Comparator.load_score(config.get("Notes", []), config.get("BPM", 80))
+	Comparator.load_score(config.get("Notes", []), config.get("BPM", 80), config.get("Beats", []))
 	_update_now_label()
 	mic.play()
 
@@ -234,14 +244,18 @@ func _on_note_result(status: String, expected_pitch: String, played_pitch: Strin
 				label.text = "MISS — expected %s, heard %s" % [expected_pitch, played_pitch]
 			label.modulate = Color.RED
 
-func _on_session_finished(accuracy: float) -> void:
+func _on_session_finished(accuracy: float, tempo: Dictionary) -> void:
 	_stop_listening()
 	if now_label:
 		now_label.text = ""
 	record_button.hide()
 	await get_tree().create_timer(SCORE_DISPLAY_DELAY).timeout
 	label.modulate = Color.WHITE
-	label.text = "Score: %.0f%%" % accuracy
+	var tempo_status: String = tempo.get("status", "Unknown")
+	if tempo.get("has_data", false):
+		label.text = "Score: %.0f%% — Tempo: %s" % [accuracy, tempo_status]
+	else:
+		label.text = "Score: %.0f%%" % accuracy
 	finished.emit(clampf(accuracy / 100.0, 0.0, 1.0))
 
 func get_peak_frequency() -> Dictionary:
@@ -275,3 +289,7 @@ func update_stable_note(detected: String, delta: float) -> String:
 		last_committed_note = detected
 		return detected
 	return ""
+
+
+func _on_texture_button_pressed() -> void:
+	explayer.play()

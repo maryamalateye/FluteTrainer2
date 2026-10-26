@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://buuqid3n8vy01"]
 
 [ext_resource type="Script" uid="uid://v44yiv5jg6l3" path="res://Scripts/exercise_menu.gd" id="1_nsopj"]
+[ext_resource type="Theme" uid="uid://bhycjynp2psnk" path="res://theme.tres" id="2_wvplg"]
 
 [node name="ExerciseMenu" type="Control" unique_id=80788861]
 layout_mode = 3
@@ -18,6 +19,7 @@ offset_bottom = 450.0
 
 [node name="Label" type="Label" parent="VBoxContainer" unique_id=1123805146]
 layout_mode = 2
+theme = ExtResource("2_wvplg")
 text = "Select Exercise"
 horizontal_alignment = 1
 
@@ -31,6 +33,7 @@ size_flags_horizontal = 3
 
 [node name="BackButton" type="Button" parent="VBoxContainer" unique_id=1456371715]
 layout_mode = 2
+theme = ExtResource("2_wvplg")
 text = "Back"
 
 [connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

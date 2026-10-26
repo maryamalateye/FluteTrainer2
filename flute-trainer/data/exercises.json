@@ -4,7 +4,8 @@
 			"Exercise": "Exercise 1",
 			"BPM": 60,
 			"Notes": ["D5", "E5", "F#5", "G5"],
-			"Beats": [1, 1, 1, 1]
+			"Beats": [1, 1, 1, 1],
+			"AudioPath": "res://audio/ex1.wav"
 		},
 		{
 			"Exercise": "Exercise 2",

@@ -4,6 +4,7 @@ extends Control
 @onready var content: Control = $Content
 @onready var results_screen: Control = $ResultsScreen
 @onready var score_label: Label = $ResultsScreen/VBoxContainer/ScoreLabel
+@onready var details_label: RichTextLabel = $ResultsScreen/VBoxContainer/DetailsLabel
 @onready var retry_button: Button = $ResultsScreen/VBoxContainer/RetryButton
 @onready var next_button: Button = $ResultsScreen/VBoxContainer/NextButton
 @onready var menu_button: Button = $ResultsScreen/VBoxContainer/MenuButton
@@ -38,11 +39,43 @@ func _load_current() -> void:
 func _on_exercise_finished(score: float) -> void:
 	var passed := Gamestate.show_result(_current_info["id"], score)
 	score_label.text = "%d%% - %s" % [round(score * 100), "Passed!" if passed else "Try again"]
+	details_label.text = _build_details_bbcode()
 
 	var next_info := ExerciseDatabase.get_by_id(_current_info["id"] + 1)
 	next_button.disabled = not (passed and not next_info.is_empty())
 
 	results_screen.show()
+
+# Builds the note-by-note breakdown and tempo summary shown on the results
+# screen, from the Comparator state left over by the just-finished session.
+func _build_details_bbcode() -> String:
+	var lines: Array = []
+
+	lines.append("[b]Notes[/b]")
+	for i in range(Comparator.history.size()):
+		var entry: Dictionary = Comparator.history[i]
+		var status: String = entry["status"]
+		var color := "lime" if status == "correct" else ("yellow" if status == "close" else "red")
+		var played: String = entry["played"] if entry["played"] != "" else "nothing"
+		var verdict := "Correct" if status == "correct" else ("Close (%s)" % played if status == "close" else "Wrong (%s)" % played)
+		lines.append("%d. %s — [color=%s]%s[/color]" % [i + 1, entry["expected"], color, verdict])
+
+	var tempo: Dictionary = Comparator.last_tempo_result
+	if not tempo.is_empty():
+		var expected_bpm: float = tempo.get("expected_bpm", 0.0)
+		var status: String = tempo.get("status", "Unknown")
+		lines.append("")
+		lines.append("[b]Tempo[/b]")
+		if tempo.get("has_data", false):
+			var actual_bpm: float = tempo.get("actual_bpm", 0.0)
+			var tempo_color := "lime" if status == "Just Right" else "red"
+			lines.append("Expected: %.0f BPM   Actual: %.0f BPM" % [expected_bpm, actual_bpm])
+			lines.append("[color=%s]%s[/color]" % [tempo_color, status])
+		else:
+			lines.append("Expected: %.0f BPM   Actual: N/A" % expected_bpm)
+			lines.append("[color=gray]Not enough notes detected to measure tempo[/color]")
+
+	return "\n".join(lines)
 
 func _go_to_next() -> void:
 	Gamestate.selected_exercise_id = _current_info["id"] + 1

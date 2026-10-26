@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://bnqxck0sss5ow"]
+
+[ext_resource type="Script" uid="uid://dbewjaqehj3dt" path="res://Scripts/exercise.gd" id="1_vgskp"]
+
+[sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_qpkpj"]
+
+[node name="Exercise" type="Control" unique_id=1746021676]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vgskp")
+
+[node name="Label" type="Label" parent="." unique_id=1211230672]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 23.0
+text = "Play your exercise"
+
+[node name="NowLabel" type="Label" parent="." unique_id=1000000003]
+layout_mode = 0
+offset_top = 90.0
+offset_right = 400.0
+offset_bottom = 129.0
+theme_override_font_sizes/font_size = 28
+
+[node name="Button" type="Button" parent="." unique_id=1501146245]
+layout_mode = 0
+offset_left = 370.0
+offset_top = 420.0
+offset_right = 770.0
+offset_bottom = 451.0
+text = "Done"
+
+[node name="Mic" type="AudioStreamPlayer" parent="." unique_id=1681820808]
+stream = SubResource("AudioStreamMicrophone_qpkpj")
+bus = &"Record"
+
+[node name="NoteProgress" type="ProgressBar" parent="." unique_id=1000000001]
+layout_mode = 0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 60.0
+max_value = 1.0
+show_percentage = false
+
+[node name="BeatPulse" type="ColorRect" parent="." unique_id=1000000002]
+layout_mode = 0
+offset_left = 320.0
+offset_top = 30.0
+offset_right = 350.0
+offset_bottom = 60.0
+pivot_offset = Vector2(15, 15)
+color = Color(0.55, 0.55, 0.6, 1)

@@ -1,0 +1,16 @@
+{
+	"Exercises": [
+		{
+			"Exercise": "Exercise 1",
+			"BPM": 60,
+			"Notes": ["D5", "E5", "F#5", "G5"],
+			"Beats": [1, 1, 1, 1]
+		},
+		{
+			"Exercise": "Exercise 2",
+			"BPM": 60,
+			"Notes": ["D5", "D5",  "D5",  "D5"],
+			"Beats": [1, 1, 1, 1]
+		}
+	]
+}

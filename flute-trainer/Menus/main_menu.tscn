@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://xjjrwi3wwx74"]
+
+[ext_resource type="Script" uid="uid://b1q0ieijd6gpy" path="res://Scripts/main_menu.gd" id="1_jf8mj"]
+
+[node name="MainMenu" type="Control" unique_id=1110346453]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+script = ExtResource("1_jf8mj")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=310235245]
+layout_mode = 0
+offset_left = 370.0
+offset_top = 150.0
+offset_right = 770.0
+offset_bottom = 450.0
+
+[node name="Label" type="Label" parent="VBoxContainer" unique_id=1686481440]
+layout_mode = 2
+text = "Welcome to Flute Trainer"
+horizontal_alignment = 1
+
+[node name="PracticeButton" type="Button" parent="VBoxContainer" unique_id=1473420390]
+layout_mode = 2
+text = "Practice"
+
+[node name="AchievementsButton" type="Button" parent="VBoxContainer" unique_id=1814208061]
+layout_mode = 2
+text = "Achievements"
+
+[connection signal="pressed" from="VBoxContainer/PracticeButton" to="." method="_on_practice_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/AchievementsButton" to="." method="_on_achievements_button_pressed"]

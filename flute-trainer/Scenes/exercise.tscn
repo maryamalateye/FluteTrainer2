@@ -3,6 +3,7 @@
 [ext_resource type="Theme" uid="uid://bhycjynp2psnk" path="res://theme.tres" id="1_gyahg"]
 [ext_resource type="Script" uid="uid://dbewjaqehj3dt" path="res://Scripts/exercise.gd" id="1_vgskp"]
 [ext_resource type="Texture2D" uid="uid://dgf2c0ndak3cn" path="res://icons/play.png" id="3_csm5r"]
+[ext_resource type="Script" uid="uid://p7sb5q703v0d" path="res://Scripts/sheet_music.gd" id="4_sheet"]
 
 [sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_qpkpj"]
 
@@ -14,20 +15,20 @@ script = ExtResource("1_vgskp")
 
 [node name="Label" type="Label" parent="." unique_id=1211230672]
 layout_mode = 0
-offset_left = 15.0
-offset_top = 86.0
-offset_right = 415.0
-offset_bottom = 109.0
+offset_left = 31.0
+offset_top = 94.0
+offset_right = 199.0
+offset_bottom = 117.0
 theme = ExtResource("1_gyahg")
 text = "Play your exercise"
 
-[node name="NowLabel" type="Label" parent="." unique_id=1000000003]
-layout_mode = 0
-offset_top = 90.0
-offset_right = 400.0
-offset_bottom = 129.0
-theme = ExtResource("1_gyahg")
-theme_override_font_sizes/font_size = 28
+[node name="SheetMusic" type="Control" parent="." unique_id=1000000006]
+anchors_preset = 0
+offset_left = 5.0
+offset_top = 190.0
+offset_right = 755.0
+offset_bottom = 412.0
+script = ExtResource("4_sheet")
 
 [node name="Button" type="Button" parent="." unique_id=1501146245]
 layout_mode = 0
@@ -42,21 +43,12 @@ text = "Done"
 stream = SubResource("AudioStreamMicrophone_qpkpj")
 bus = &"Record"
 
-[node name="NoteProgress" type="ProgressBar" parent="." unique_id=1000000001]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 127.0
-offset_right = 309.0
-offset_bottom = 147.0
-max_value = 1.0
-show_percentage = false
-
 [node name="BeatPulse" type="ColorRect" parent="." unique_id=1000000002]
 layout_mode = 0
-offset_left = 359.0
-offset_top = 124.0
-offset_right = 389.0
-offset_bottom = 154.0
+offset_left = 213.0
+offset_top = 93.0
+offset_right = 243.0
+offset_bottom = 123.0
 pivot_offset = Vector2(15, 15)
 color = Color(0.55, 0.55, 0.6, 1)
 
@@ -64,9 +56,9 @@ color = Color(0.55, 0.55, 0.6, 1)
 
 [node name="TextureButton" type="TextureButton" parent="." unique_id=1907533080]
 layout_mode = 0
-offset_left = 18.0
+offset_left = 23.0
 offset_top = 13.0
-offset_right = 68.0
+offset_right = 73.0
 offset_bottom = 63.0
 texture_normal = ExtResource("3_csm5r")
 ignore_texture_size = true
@@ -81,4 +73,13 @@ offset_bottom = 52.0
 theme = ExtResource("1_gyahg")
 text = "Listen to the exercise"
 
+[node name="BackButton" type="Button" parent="." unique_id=1753765587]
+layout_mode = 0
+offset_left = 368.0
+offset_top = 477.0
+offset_right = 767.0
+offset_bottom = 509.0
+text = "Back"
+
 [connection signal="pressed" from="TextureButton" to="." method="_on_texture_button_pressed"]
+[connection signal="pressed" from="BackButton" to="." method="_on_button_2_pressed"]

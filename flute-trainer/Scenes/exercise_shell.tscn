@@ -13,14 +13,17 @@ grow_vertical = 2
 script = ExtResource("1_4uchv")
 
 [node name="TitleLabel" type="Label" parent="." unique_id=1572778809]
-layout_mode = 0
-offset_left = 370.0
-offset_top = 150.0
-offset_right = 770.0
-offset_bottom = 173.0
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 30.0
+offset_bottom = 75.0
+grow_horizontal = 2
 theme = ExtResource("2_0htar")
+theme_override_font_sizes/font_size = 32
 text = "Exercise Title"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Content" type="Control" parent="." unique_id=153967762]
 anchors_preset = 0

@@ -3,28 +3,36 @@ extends Control
 @onready var achievements_grid: GridContainer = $VBoxContainer/ScrollContainer/AchievementsGrid
 @onready var back_button: Button = $VBoxContainer/BackButton
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	for entry in ExerciseDatabase.all():
 		achievements_grid.add_child(_make_badge(entry))
 
-#replace with actual badge later
-func _make_badge(entry: Dictionary) -> Control:
-	var box := VBoxContainer.new()
+const PASS_ICON: Texture2D = preload("res://icons/pass.png")
+const FAIL_ICON: Texture2D = preload("res://icons/fail.png")
+const ICON_SIZE := Vector2(48, 48)
+const THEME: Theme = preload("res://theme.tres")
 
-	var icon := Label.new()
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.add_theme_font_size_override("font_size", 32)
+func _make_badge(entry: Dictionary) -> Control:
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = ICON_SIZE
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	var caption := Label.new()
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	caption.text = entry["Exercise"]
+	caption.theme = THEME
+	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	caption.add_theme_font_size_override("font_size", 24)
+	caption.text = "Level %d" % (entry["id"] + 1)
 
 	if Gamestate.has_passed(entry["id"]):
-		icon.text = "✓"
+		icon.texture = PASS_ICON
 	else:
-		icon.text = "✖"
-		icon.modulate = Color(1, 1, 1, 0.4)
+		icon.texture = FAIL_ICON
 		caption.modulate = Color(1, 1, 1, 0.4)
 
 	box.add_child(icon)

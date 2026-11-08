@@ -46,8 +46,7 @@ func _on_exercise_finished(score: float) -> void:
 
 	results_screen.show()
 
-# Builds the note-by-note breakdown and tempo summary shown on the results
-# screen, from the Comparator state left over by the just-finished session.
+# Builds the note-by-note breakdown and tempo summary shown on the results screen
 func _build_details_bbcode() -> String:
 	var lines: Array = []
 
@@ -62,18 +61,12 @@ func _build_details_bbcode() -> String:
 
 	var tempo: Dictionary = Comparator.last_tempo_result
 	if not tempo.is_empty():
-		var expected_bpm: float = tempo.get("expected_bpm", 0.0)
-		var status: String = tempo.get("status", "Unknown")
+		var tempo_color := "gray"
+		if tempo.get("has_data", false):
+			tempo_color = "lime" if tempo.get("status", "") == "Just Right" else "red"
 		lines.append("")
 		lines.append("[b]Tempo[/b]")
-		if tempo.get("has_data", false):
-			var actual_bpm: float = tempo.get("actual_bpm", 0.0)
-			var tempo_color := "lime" if status == "Just Right" else "red"
-			lines.append("Expected: %.0f BPM   Actual: %.0f BPM" % [expected_bpm, actual_bpm])
-			lines.append("[color=%s]%s[/color]" % [tempo_color, status])
-		else:
-			lines.append("Expected: %.0f BPM   Actual: N/A" % expected_bpm)
-			lines.append("[color=gray]Not enough notes detected to measure tempo[/color]")
+		lines.append("[color=%s]%s[/color]" % [tempo_color, Comparator.tempo_message(tempo)])
 
 	return "\n".join(lines)
 

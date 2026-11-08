@@ -1,3 +1,2 @@
 # FluteTrainer2
-
-This is a flute trainer app (for Irish traditional music, but right now just basic flute notes). It uses real-time note detection, and can detect rhythm (willing to sacrifice real-time if more important for rhythm, OR having a clock and allowing some tolerance for when a note is detected, so at second 3 i expect a note, if the user played a note at second 4 that's okay and accepted). 
+Flute Trainer is a flute trainer app for Irish traditional music. It uses real-time note detection, and can detect rhythm to use for music exercises

@@ -12,18 +12,22 @@ const NOTES_NAME_SHARP := ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A",
 const BEAT_PULSE_DECAY: float = 0.35	#seconds for the metronome pulse to fade back down
 const BEAT_PULSE_BASE_COLOR := Color(0.55, 0.55, 0.6)
 const BEAT_PULSE_HIT_COLOR := Color(1.0, 0.85, 0.2)
-const COUNT_IN_BEATS: int = 4	#how many metronome beats to click before listening starts
-const SCORE_DISPLAY_DELAY: float = 1.0	#seconds to hold the last note's feedback before switching to the score screen
+const COUNT_IN_BEATS: int = 4
+const SCORE_DISPLAY_DELAY: float = 1.0	
 
 var config: Dictionary = {}
 
 @onready var label: Label = $Label
-@onready var now_label: Label = $NowLabel
+@onready var sheet_music: SheetMusic = $SheetMusic
 @onready var record_button: Button = $Button
 @onready var mic: AudioStreamPlayer = $Mic
-@onready var note_progress: ProgressBar = $NoteProgress
+@onready var note_progress: ProgressBar = get_node_or_null("NoteProgress")
 @onready var beat_pulse: ColorRect = $BeatPulse
 @onready var explayer: AudioStreamPlayer = $ExPlayer
+@onready var texture_button: TextureButton = $TextureButton
+
+const PLAY_ICON := preload("res://icons/play.png")
+const PAUSE_ICON := preload("res://icons/pause.png")
 
 
 var spectrum: AudioEffectSpectrumAnalyzerInstance
@@ -36,12 +40,12 @@ var last_committed_note := ""
 var _started := false
 
 var exercise_notes: Array = []
-var note_beats: Array[float] = []	#beat length (1 = full beat, 0.5 = half beat) for each note, in sync with Comparator.index
+var note_beats: Array[float] = []
 var note_elapsed := 0.0
 var metronome_elapsed := 0.0
 var pulse_strength := 0.0
 var _last_shown_index := -1
-var session_elapsed := 0.0	#seconds since listening started, used to timestamp note onsets for tempo tracking
+var session_elapsed := 0.0
 
 func _ready() -> void:
 	record_button.show()
@@ -52,18 +56,17 @@ func start() -> void:
 		return
 	_started = true
 
-	var bpm: int = config.get("BPM", 80)
 	exercise_notes = config.get("Notes", [])
 	var beats: Array = config.get("Beats", [])
 	var audio_path: String = config.get("AudioPath", "")
 	if audio_path != "":
 		explayer.stream = load(audio_path)
+	explayer.finished.connect(_on_explayer_finished)
 	note_beats.clear()
 	for i in range(exercise_notes.size()):
 		note_beats.append(float(beats[i]) if i < beats.size() else 1.0)
-	label.text = "Play at %d BPM: %s" % [bpm, ", ".join(exercise_notes)]
-	if now_label:
-		now_label.text = ""
+	label.text = "Play your exercise"
+	sheet_music.set_score(exercise_notes, beats, config.get("BeatsPerBar", 4))
 	record_button.text = "Start Listening"
 	record_button.pressed.connect(_on_record_button_pressed)
 	Comparator.note_result.connect(_on_note_result)
@@ -111,9 +114,7 @@ func _process(delta: float) -> void:
 		print(newly_committed)
 		Comparator.record_onset(session_elapsed)
 
-# Advances one note per beat/half-beat, on a clock, instead of waiting for the
-# player to hold a note stably — keeps the exercise moving at tempo. Scores
-# whatever pitch the player was last on when each note's time is up.
+# Advances notes on a clock
 func _update_timing(delta: float) -> void:
 	if not Comparator.session_active:
 		return
@@ -146,19 +147,13 @@ func _current_note_duration() -> float:
 		return 0.0
 	return note_beats[idx] * max(Comparator.seconds_per_beat, 0.001)
 
-# Shows which note is expected right now, separate from the transient
-# GOOD/CLOSE/MISS feedback in `label` — so the two never overwrite each other.
+# Highlights note expected
 func _update_now_label() -> void:
 	var idx := Comparator.index
 	if idx == _last_shown_index:
 		return
 	_last_shown_index = idx
-	if not now_label:
-		return
-	if idx >= 0 and idx < exercise_notes.size():
-		now_label.text = "Now play: %s" % exercise_notes[idx]
-	else:
-		now_label.text = ""
+	sheet_music.set_current(idx if idx < exercise_notes.size() else -1)
 
 func _trigger_beat_pulse() -> void:
 	pulse_strength = 1.0
@@ -181,14 +176,11 @@ func _on_record_button_pressed() -> void:
 		return
 	_begin_count_in()
 
-# Clicks out COUNT_IN_BEATS beats at the exercise's tempo before listening
-# turns on, so you know the pulse and have a moment to get your flute up —
-# no pitch detection happens until this finishes.
 func _begin_count_in() -> void:
 	counting_in = true
 	record_button.disabled = true
-	if now_label:
-		now_label.text = ""
+	sheet_music.reset_results()
+	sheet_music.set_current(0)	
 	var bpm: int = config.get("BPM", 80)
 	var beat_length: float = 60.0 / float(max(bpm, 1))
 	for i in range(COUNT_IN_BEATS, 0, -1):
@@ -229,31 +221,17 @@ func _stop_listening() -> void:
 	record_button.text = "Start Listening"
 	mic.stop()
 
-func _on_note_result(status: String, expected_pitch: String, played_pitch: String) -> void:
-	match status:
-		"correct":
-			label.text = "GOOD — %s" % expected_pitch
-			label.modulate = Color.GREEN
-		"close":
-			label.text = "CLOSE — expected %s, played %s" % [expected_pitch, played_pitch]
-			label.modulate = Color.ORANGE
-		_:
-			if played_pitch == "":
-				label.text = "MISS — expected %s, heard nothing" % expected_pitch
-			else:
-				label.text = "MISS — expected %s, heard %s" % [expected_pitch, played_pitch]
-			label.modulate = Color.RED
+func _on_note_result(status: String, _expected_pitch: String, _played_pitch: String) -> void:
+	sheet_music.set_result(Comparator.index - 1, status)
 
 func _on_session_finished(accuracy: float, tempo: Dictionary) -> void:
 	_stop_listening()
-	if now_label:
-		now_label.text = ""
+	sheet_music.set_current(-1)
 	record_button.hide()
 	await get_tree().create_timer(SCORE_DISPLAY_DELAY).timeout
 	label.modulate = Color.WHITE
-	var tempo_status: String = tempo.get("status", "Unknown")
 	if tempo.get("has_data", false):
-		label.text = "Score: %.0f%% — Tempo: %s" % [accuracy, tempo_status]
+		label.text = "Score: %.0f%%  %s" % [accuracy, Comparator.tempo_message(tempo)]
 	else:
 		label.text = "Score: %.0f%%" % accuracy
 	finished.emit(clampf(accuracy / 100.0, 0.0, 1.0))
@@ -290,6 +268,22 @@ func update_stable_note(detected: String, delta: float) -> String:
 		return detected
 	return ""
 
-
 func _on_texture_button_pressed() -> void:
-	explayer.play()
+	if explayer.playing and not explayer.stream_paused:
+		explayer.stream_paused = true
+		texture_button.texture_normal = PLAY_ICON
+	elif explayer.stream_paused:
+		explayer.stream_paused = false
+		texture_button.texture_normal = PAUSE_ICON
+	else:
+		explayer.play()
+		texture_button.texture_normal = PAUSE_ICON
+
+func _on_explayer_finished() -> void:
+	texture_button.texture_normal = PLAY_ICON
+
+func _on_button_2_pressed() -> void:
+	mic.stop()
+	explayer.stop()
+	Comparator.reset()
+	get_tree().change_scene_to_file("res://Menus/exercise_menu.tscn")

@@ -11,7 +11,8 @@
 			"Exercise": "Exercise 2",
 			"BPM": 60,
 			"Notes": ["D5", "D5",  "D5",  "D5"],
-			"Beats": [1, 1, 1, 1]
+			"Beats": [1, 1, 1, 1],
+			"AudioPath": "res://audio/ex2.wav"
 		}
 	]
 }

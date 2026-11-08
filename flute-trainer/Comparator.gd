@@ -1,5 +1,5 @@
 extends Node
-#autoload: sequential pitch comparison against the current exercise's Notes list
+#autoload
 
 var expected: Array = []
 var note_beats: Array[float] = []
@@ -11,10 +11,10 @@ var close: int = 0
 var history: Array = []
 var session_active: bool = false
 
-var onset_log: Array = []	#{index, time} pairs, one per detected note attack, in session-elapsed seconds
+var onset_log: Array = []
 var last_tempo_result: Dictionary = {}
 
-const TEMPO_TOLERANCE: float = 0.08	#fraction above/below expected BPM still considered "Just Right"
+const TEMPO_TOLERANCE: float = 0.08	
 
 signal note_result(status: String, expected_pitch: String, played_pitch: String)
 signal session_finished(accuracy: float, tempo: Dictionary)
@@ -39,10 +39,6 @@ func load_score(notes: Array, bpm_value: int, beats: Array = []) -> void:
 	last_tempo_result = {}
 	session_active = true
 
-# Called by the exercise scene whenever it detects a new note attack (silence
-# followed by sound), tagged with how far into the session we are. We record
-# which note was "current" at that moment so we can later compare when the
-# player actually attacked each note against when they were supposed to.
 func record_onset(elapsed_time: float) -> void:
 	if not session_active:
 		return
@@ -58,9 +54,6 @@ func check_note(played_pitch: String) -> void:
 	print("Played: %s Expected: %s (%s)" % [played_pitch, expected_pitch, status])
 	_record(expected_pitch, played_pitch, status)
 
-# Compares played vs expected and returns "correct" (exact match), "close"
-# (a semitone off, or the right note in the wrong octave — common with
-# flute/whistle overblowing) which should not be scored as wrong, or "miss".
 func classify_pitch(played_pitch: String, expected_pitch: String) -> String:
 	var norm_played := normalise_pitch(played_pitch)
 	var norm_expected := normalise_pitch(expected_pitch)
@@ -150,9 +143,6 @@ func _finish_session() -> void:
 	last_tempo_result = _compute_tempo_analysis()
 	session_finished.emit(accuracy, last_tempo_result)
 
-# Compares when the player actually attacked each note (onset_log) against
-# when they were expected to, derived from the exercise's beat grid, to work
-# out the BPM the player was actually playing at versus the target BPM.
 func _compute_tempo_analysis() -> Dictionary:
 	var expected_times: Array = []
 	var cumulative := 0.0
@@ -160,7 +150,6 @@ func _compute_tempo_analysis() -> Dictionary:
 		expected_times.append(cumulative)
 		cumulative += b * seconds_per_beat
 
-	# First onset recorded for each note index = the player's actual attack time for that note.
 	var actual_times: Dictionary = {}
 	for entry in onset_log:
 		var idx: int = entry["index"]
@@ -209,6 +198,18 @@ func _compute_tempo_analysis() -> Dictionary:
 		"has_data": has_data,
 		"status": overall_status
 	}
+
+func tempo_message(tempo: Dictionary) -> String:
+	if not tempo.get("has_data", false):
+		return "Not enough notes heard to check your tempo"
+	match tempo.get("status", ""):
+		"Too Fast":
+			return "You were playing too fast"
+		"Too Slow":
+			return "You were going too slow"
+		"Just Right":
+			return "Your tempo was just right"
+	return "Couldn't check your tempo"
 
 func _classify_tempo(actual_bpm: float) -> String:
 	if bpm <= 0.0:

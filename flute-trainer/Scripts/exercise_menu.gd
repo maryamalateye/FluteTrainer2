@@ -3,7 +3,6 @@ extends Control
 @onready var exercise_list: VBoxContainer = $VBoxContainer/ScrollContainer/ExerciseList
 @onready var back_button: Button = $VBoxContainer/BackButton
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	for entry in ExerciseDatabase.all():
 		var button := Button.new()
